@@ -1,9 +1,9 @@
-﻿import time
+import time
 import json
 from fastapi import FastAPI, Request
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
-from core.logging import logger
+from orka.core.logging import logger
 
 class LoggingMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next) -> Response:
