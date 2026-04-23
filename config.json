@@ -1,0 +1,10 @@
+﻿{
+  "llm": {
+    "provider": "groq",
+    "model": "llama-3.3-70b-versatile"
+  },
+  "tools": [
+    "create_customer_tool",
+    "send_email_tool"
+  ]
+}

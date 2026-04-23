@@ -1,30 +1,31 @@
-from pydantic import BaseSettings
+﻿import os
+from pathlib import Path
+from dotenv import load_dotenv
 from langchain_groq import ChatGroq
 from langchain.agents import initialize_agent, AgentType
-from orka.services.crm import create_customer_tool
-from orka.services.email import send_email_tool
+from orka.config.loader import load_config
+from orka.tools.registry import tool_registry
 from orka.core.logging import logger
-
 
 class OrkaAgent:
     def __init__(self, config_path: str):
-        class DynamicSettings(BaseSettings):
-            groq_api_key: str
-            model_name: str = "llama-3.3-70b-versatile"
-            base_url: str = "https://api.groq.com/openai/v1"
-
-            class Config:
-                env_file = config_path
-
-        self.settings = DynamicSettings()
+        config_dir = Path(config_path).parent
+        env_path = config_dir / ".env"
+        load_dotenv(env_path)
+        
+        self.config = load_config(config_path)
+        
+        api_key = os.getenv("GROQ_API_KEY")
+        if not api_key:
+            raise ValueError("GROQ_API_KEY not found in .env")
         
         self.llm = ChatGroq(
-            api_key=self.settings.groq_api_key,
-            model_name=self.settings.model_name,
-            base_url=self.settings.base_url
+            api_key=api_key,
+            model_name=self.config.llm.model,
+            base_url="https://api.groq.com/openai/v1"
         )
         
-        self.tools = [create_customer_tool, send_email_tool]
+        self.tools = [tool_registry[name] for name in self.config.tools]
         
         self.agent = initialize_agent(
             self.tools,
