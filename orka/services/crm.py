@@ -1,5 +1,5 @@
 from typing import Dict, List
-from langchain.tools import tool
+from orka.tools.registry import register_tool
 
 customers: List[Dict[str, str]] = []
 
@@ -19,7 +19,7 @@ def create_customer(name: str, city: str) -> Dict[str, str]:
     }
 
 
-@tool
+@register_tool("create_customer_tool")
 def create_customer_tool(name: str, city: str) -> str:
     """Create a new customer in the CRM system.
     

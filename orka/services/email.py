@@ -1,5 +1,5 @@
 from typing import Dict
-from langchain.tools import tool
+from orka.tools.registry import register_tool
 
 
 def send_email(to: str, message: str) -> Dict[str, str]:
@@ -12,7 +12,7 @@ def send_email(to: str, message: str) -> Dict[str, str]:
     }
 
 
-@tool
+@register_tool("send_email_tool")
 def send_email_tool(to: str, message: str) -> str:
     """Send an email to a recipient.
     

@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from langchain_groq import ChatGroq
 from langchain.agents import initialize_agent, AgentType
 from orka.config.loader import load_config
-from orka.tools.registry import tool_registry
+from orka.tools.registry import registry
 from orka.core.logging import logger
 
 class OrkaAgent:
@@ -25,7 +25,7 @@ class OrkaAgent:
             base_url="https://api.groq.com/openai/v1"
         )
         
-        self.tools = [tool_registry[name] for name in self.config.tools]
+        self.tools = [registry[name] for name in self.config.tools]
         
         self.agent = initialize_agent(
             self.tools,
