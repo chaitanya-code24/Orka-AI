@@ -1,6 +1,10 @@
-﻿fastapi
-uvicorn[standard]
-langchain
+﻿langchain
+langchain-groq
+langchain-openai
+langchain-google-genai
+langchain-anthropic
 python-dotenv
 pydantic
+fastapi
+uvicorn[standard]
 groq
