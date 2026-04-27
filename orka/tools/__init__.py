@@ -1,6 +1,7 @@
-from orka.tools.registry import registry, register_tool
+from orka.tools.decorators import register_tool
+from orka.tools.registry import get_tool, list_tools, registry
 
 # Import services to trigger tool registration
 from orka.services import crm, email
 
-__all__ = ["registry", "register_tool"]
+__all__ = ["registry", "register_tool", "get_tool", "list_tools"]
