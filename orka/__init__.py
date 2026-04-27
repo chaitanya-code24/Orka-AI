@@ -2,6 +2,7 @@ from orka.agent.orka_agent import OrkaAgent
 from orka.core import (
     BaseMemory,
     BaseValidator,
+    ExecutionTrace,
     InMemoryMemory,
     get_memory,
     register_llm_provider,
@@ -15,6 +16,7 @@ __all__ = [
     "register_llm_provider",
     "register_validator",
     "BaseValidator",
+    "ExecutionTrace",
     "BaseMemory",
     "InMemoryMemory",
     "register_memory_provider",
