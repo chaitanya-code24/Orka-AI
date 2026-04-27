@@ -1,11 +1,17 @@
-﻿from pydantic import BaseSettings
+import os
+from dataclasses import dataclass
 
-class Settings(BaseSettings):
-    groq_api_key: str
-    model_name: str = "llama-3.3-70b-versatile"
-    base_url: str = "https://api.groq.com/openai/v1"
+from dotenv import load_dotenv
 
-    class Config:
-        env_file = ".env"
+
+load_dotenv()
+
+
+@dataclass
+class Settings:
+    groq_api_key: str = os.getenv("GROQ_API_KEY", "")
+    model_name: str = os.getenv("MODEL_NAME", "llama-3.3-70b-versatile")
+    base_url: str = os.getenv("BASE_URL", "https://api.groq.com/openai/v1")
+
 
 settings = Settings()

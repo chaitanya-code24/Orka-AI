@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import re
 from typing import Any, Type
 
 
@@ -31,6 +32,13 @@ class ValidationManager:
             if validator_type and not isinstance(validator, validator_type):
                 continue
             if not validator.validate(data):
+                return False
+        return True
+
+    def validate_with(self, data: Any, validator_types: tuple[Type[BaseValidator], ...]) -> bool:
+        """Validate data using only the selected validator classes."""
+        for validator_type in validator_types:
+            if not self.validate(data, validator_type):
                 return False
         return True
 
@@ -69,11 +77,9 @@ class ToolValidator(BaseValidator):
     def validate(self, data: str) -> bool:
         if not isinstance(data, str):
             return False
-        # Check if tool name is reasonable
-        if len(data) == 0 or len(data) > 100:
+        if len(data.strip()) == 0 or len(data) > 100:
             return False
-        # Could add more checks like allowed characters, etc.
-        return True
+        return bool(re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", data))
 
 
 @register_validator

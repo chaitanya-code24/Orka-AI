@@ -1,5 +1,5 @@
-from .llm_providers import register_llm_provider
-from .validation import register_validator, BaseValidator
-from .memory import BaseMemory, InMemoryMemory, register_memory_provider, get_memory
+from orka.core.llm_providers import register_llm_provider
+from orka.core.memory import BaseMemory, InMemoryMemory, get_memory, register_memory_provider
+from orka.core.validation import BaseValidator, register_validator
 
 __all__ = ["register_llm_provider", "register_validator", "BaseValidator", "BaseMemory", "InMemoryMemory", "register_memory_provider", "get_memory"]
