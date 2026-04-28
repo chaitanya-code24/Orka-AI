@@ -1,4 +1,5 @@
-﻿langchain
+langchain
+langgraph
 langchain-groq
 langchain-openai
 langchain-google-genai
