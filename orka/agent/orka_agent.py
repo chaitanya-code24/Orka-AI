@@ -1,9 +1,12 @@
 from pathlib import Path
-from typing import Any
 
 from dotenv import load_dotenv
 
+import orka.tools  # noqa: F401
 from orka.config.loader import load_config
+from orka.graph.builder import build_graph
+from orka.graph.state import AgentState
+from orka.tools import get_tool
 
 
 class OrkaAgent:
@@ -14,16 +17,23 @@ class OrkaAgent:
         load_dotenv(self.config_path.parent / ".env")
 
         self.config = load_config(str(self.config_path))
-        self.graph = self._initialize_graph()
+        self._initialize_tools()
+        self.graph = build_graph()
 
-    def _initialize_graph(self) -> Any:
-        """Prepare the graph slot; graph construction is added in a later module."""
-        return None
+    def _initialize_tools(self) -> None:
+        for tool_name in self.config.tools:
+            get_tool(tool_name)
 
     def run(self, query: str):
         """Run the configured LangGraph workflow for a user query."""
-        if self.graph is None:
-            raise NotImplementedError("LangGraph workflow is not implemented yet.")
+        initial_state: AgentState = {
+            "input": query,
+            "steps": [],
+            "current_step": "",
+            "tool_result": "",
+            "final_output": "",
+            "status": "idle",
+        }
 
-        initial_state = {"input": query}
-        return self.graph.invoke(initial_state)
+        final_state = self.graph.invoke(initial_state)
+        return final_state["final_output"] or final_state["tool_result"]
