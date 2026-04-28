@@ -1,34 +1,34 @@
-from typing import Dict, List
+from typing import TypedDict
+
 from orka.tools.registry import register_tool
 
-customers: List[Dict[str, str]] = []
+
+class Customer(TypedDict):
+    id: str
+    name: str
+    city: str
+    status: str
 
 
-def create_customer(name: str, city: str) -> Dict[str, str]:
-    customer = {
-        "id": f"cust_{len(customers) + 1}",
+CUSTOMERS: list[Customer] = []
+
+
+def create_customer(name: str, city: str) -> dict[str, object]:
+    customer: Customer = {
+        "id": f"cust_{len(CUSTOMERS) + 1}",
         "name": name,
         "city": city,
         "status": "created",
     }
-    customers.append(customer)
+    CUSTOMERS.append(customer)
+
     return {
         "success": True,
         "customer": customer,
-        "message": f"Customer '{name}' has been created successfully in {city}.",
+        "message": f"Customer '{name}' created for {city}.",
     }
 
 
 @register_tool("create_customer_tool")
 def create_customer_tool(name: str, city: str) -> str:
-    """Create a new customer in the CRM system.
-    
-    Args:
-        name: Customer name
-        city: Customer city
-        
-    Returns:
-        Success message with customer details
-    """
-    result = create_customer(name, city)
-    return str(result)
+    return str(create_customer(name, city))

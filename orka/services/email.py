@@ -1,27 +1,32 @@
-from typing import Dict
+from typing import TypedDict
+
 from orka.tools.registry import register_tool
 
 
-def send_email(to: str, message: str) -> Dict[str, str]:
-    return {
-        "success": True,
+class EmailMessage(TypedDict):
+    to: str
+    message: str
+    status: str
+
+
+SENT_EMAILS: list[EmailMessage] = []
+
+
+def send_email(to: str, message: str) -> dict[str, object]:
+    email: EmailMessage = {
         "to": to,
         "message": message,
         "status": "sent",
-        "info": f"Email sent to {to}. Delivery is simulated and will appear in the external mail queue.",
+    }
+    SENT_EMAILS.append(email)
+
+    return {
+        "success": True,
+        "email": email,
+        "message": f"Email sent to {to}.",
     }
 
 
 @register_tool("send_email_tool")
 def send_email_tool(to: str, message: str) -> str:
-    """Send an email to a recipient.
-    
-    Args:
-        to: Email recipient
-        message: Email message content
-        
-    Returns:
-        Confirmation of email sending
-    """
-    result = send_email(to, message)
-    return str(result)
+    return str(send_email(to, message))
