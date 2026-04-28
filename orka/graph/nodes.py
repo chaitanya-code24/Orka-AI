@@ -33,12 +33,16 @@ def planner_node(state: AgentState) -> AgentState:
 
 
 def tool_node(state: AgentState) -> AgentState:
+    if state["status"] == "end":
+        return state
+
     current_step = state["current_step"]
     if not current_step:
         return {
             **state,
             "tool_result": "",
-            "status": "retry",
+            "status": "end",
+            "final_output": state["final_output"] or "No tool was selected for execution.",
         }
 
     tool = get_tool(current_step)
@@ -51,6 +55,9 @@ def tool_node(state: AgentState) -> AgentState:
 
 
 def validator_node(state: AgentState) -> AgentState:
+    if state["status"] == "end":
+        return state
+
     tool_result = state["tool_result"]
     if not tool_result:
         return {
