@@ -123,6 +123,26 @@ Run the included example:
 python -m examples.basic
 ```
 
+Run from the CLI:
+
+```bash
+orka run "create customer Alice in Pune and send email to alice@example.com message Welcome Alice"
+```
+
+Start the API server:
+
+```bash
+orka serve --config config.json --host 127.0.0.1 --port 8000
+```
+
+Submit a run over HTTP:
+
+```bash
+curl -X POST http://127.0.0.1:8000/runs ^
+  -H "Content-Type: application/json" ^
+  -d "{\"query\": \"create customer Alice in Pune and send email to alice@example.com message Welcome Alice\"}"
+```
+
 Example output:
 
 ```python

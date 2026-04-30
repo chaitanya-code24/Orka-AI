@@ -84,3 +84,9 @@ class OrkaAgent:
             result.message = "Request completed with issues."
         self.run_store.save_run(result.run_id, result.to_dict())
         return result.to_dict()
+
+    def get_run(self, run_id: str) -> dict[str, object] | None:
+        return self.run_store.get_run(run_id)
+
+    def list_runs(self) -> list[dict[str, object]]:
+        return self.run_store.list_runs()
