@@ -1,22 +1,40 @@
 import json
 
 from orka.config.models import ModelConfig, OrkaConfig
+from orka.core.exceptions import ConfigError
 
 
 def load_config(config_path: str) -> OrkaConfig:
-    with open(config_path, "r", encoding="utf-8-sig") as config_file:
-        raw_config = json.load(config_file)
+    try:
+        with open(config_path, "r", encoding="utf-8-sig") as config_file:
+            raw_config = json.load(config_file)
+    except FileNotFoundError as exc:
+        raise ConfigError(f"Config file not found: {config_path}") from exc
+    except json.JSONDecodeError as exc:
+        raise ConfigError(f"Invalid JSON in config file: {config_path}") from exc
 
     tools = raw_config.get("tools", [])
-    if not tools:
-        raise ValueError("Config must define at least one tool")
+    if not isinstance(tools, list) or not tools or not all(isinstance(tool, str) and tool.strip() for tool in tools):
+        raise ConfigError("Config must define a non-empty 'tools' list of tool names")
 
     model_data = raw_config.get("model") or raw_config.get("llm")
     model = None
     if model_data:
-        model = ModelConfig(
-            provider=model_data["provider"],
-            model=model_data["model"],
-        )
+        if not isinstance(model_data, dict):
+            raise ConfigError("'model' must be an object when provided")
+        provider = model_data.get("provider")
+        model_name = model_data.get("model")
+        if not provider or not model_name:
+            raise ConfigError("'model' must include 'provider' and 'model'")
+        model = ModelConfig(provider=provider, model=model_name)
 
-    return OrkaConfig(tools=tools, model=model)
+    version = str(raw_config.get("version", "1"))
+    environment = str(raw_config.get("environment", "development"))
+    storage_path = str(raw_config.get("storage_path", "orka.db"))
+    return OrkaConfig(
+        tools=tools,
+        model=model,
+        version=version,
+        environment=environment,
+        storage_path=storage_path,
+    )

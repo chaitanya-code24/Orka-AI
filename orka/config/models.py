@@ -11,3 +11,16 @@ class ModelConfig:
 class OrkaConfig:
     tools: list[str] = field(default_factory=list)
     model: ModelConfig | None = None
+    version: str = "1"
+    environment: str = "development"
+    storage_path: str = "orka.db"
+
+
+# Compatibility aliases for older internal modules that still import these names.
+LLMConfig = ModelConfig
+
+
+@dataclass
+class Config:
+    llm: ModelConfig
+    tools: list[str] = field(default_factory=list)

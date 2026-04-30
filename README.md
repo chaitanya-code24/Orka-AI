@@ -114,7 +114,7 @@ Basic example:
 from orka import OrkaAgent
 
 agent = OrkaAgent("config.json")
-print(agent.run("create customer and send email"))
+print(agent.run("create customer Alice in Pune and send email to alice@example.com message Welcome Alice"))
 ```
 
 Run the included example:
@@ -126,7 +126,25 @@ python -m examples.basic
 Example output:
 
 ```python
-{'success': True, 'email': {'to': 'customer@example.com', 'message': 'Welcome from Orka.', 'status': 'sent'}, 'message': 'Email sent to customer@example.com.'}
+{
+  'success': True,
+  'status': 'completed',
+  'output': {
+    'steps': [...],
+    'last_result': {
+      'success': True,
+      'email': {
+        'to': 'alice@example.com',
+        'message': 'Welcome Alice',
+        'status': 'sent'
+      },
+      'message': 'Email sent to alice@example.com.'
+    }
+  },
+  'steps': [...],
+  'errors': [],
+  'message': 'Request completed successfully.'
+}
 ```
 
 ## Framework Components

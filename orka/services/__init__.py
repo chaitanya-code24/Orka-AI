@@ -1,4 +1,4 @@
-from orka.services.crm import CUSTOMERS, create_customer
-from orka.services.email import SENT_EMAILS, send_email
+from orka.services.crm import create_customer, list_customers
+from orka.services.email import list_emails, send_email
 
-__all__ = ["CUSTOMERS", "SENT_EMAILS", "create_customer", "send_email"]
+__all__ = ["create_customer", "send_email", "list_customers", "list_emails"]
