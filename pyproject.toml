@@ -1,18 +1,18 @@
-﻿[project]
-name = "orka"
+[project]
+name = "orka-ai"
 version = "0.1.0"
-description = "Orka AI backend package for action orchestration."
+description = "LangGraph-based AI action orchestration framework."
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+    "langgraph",
     "fastapi",
-    "uvicorn[standard]",
-    "langchain",
     "python-dotenv",
-    "pydantic",
-    "groq",
 ]
 
 [build-system]
 requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["orka*"]
