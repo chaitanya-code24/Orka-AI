@@ -58,13 +58,7 @@ class LLMPlanner:
         tool_summaries = []
         for tool_name in available_tools:
             definition = get_tool_definition(tool_name)
-            tool_summaries.append(
-                {
-                    "name": definition.name,
-                    "description": definition.description,
-                    "parameters": definition.parameters,
-                }
-            )
+            tool_summaries.append(definition.to_schema())
 
         return (
             "You are Orka's planner. Convert the user request into an ordered JSON plan.\n"

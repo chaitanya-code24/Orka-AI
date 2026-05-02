@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 from orka import OrkaAgent
 from orka.core.exceptions import ConfigError, GraphExecutionError, OrkaError, ValidationError
 from orka.core.logging import log_event
+from orka.tools import list_tool_schemas
 
 
 class RunRequest(BaseModel):
@@ -44,6 +45,10 @@ def create_app() -> FastAPI:
     @app.get("/health")
     def health() -> dict[str, str]:
         return {"status": "ok"}
+
+    @app.get("/tools")
+    def list_tools() -> list[dict[str, object]]:
+        return list_tool_schemas()
 
     @app.post("/runs", response_model=RunResponse)
     def create_run(payload: RunRequest) -> dict[str, object]:

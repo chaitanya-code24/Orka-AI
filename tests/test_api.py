@@ -51,6 +51,11 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(get_response.status_code, 200)
         self.assertEqual(get_response.json()["run_id"], payload["run_id"])
 
+        tools_response = client.get("/tools")
+        self.assertEqual(tools_response.status_code, 200)
+        tool_names = {tool["name"] for tool in tools_response.json()}
+        self.assertIn("create_customer_tool", tool_names)
+
     def test_approve_endpoint_resumes_waiting_run(self):
         import os
         from orka.main import create_app, get_agent

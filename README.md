@@ -11,7 +11,7 @@ Orka is designed as a small framework project rather than a one-off script. The 
 - LangGraph state, nodes, and workflow compilation
 - optional LLM-based planning with deterministic offline fallback
 - human approval gates before selected tools execute
-- reusable tool registration
+- reusable tool registration with schema discovery
 - config-driven tool loading
 - simple in-memory service integrations
 
@@ -194,6 +194,13 @@ Example output:
 
 - decorator-based registration
 - global lookup by tool name
+- JSON-schema-like tool contracts for planner prompts and API clients
+
+List registered tool schemas:
+
+```bash
+curl http://127.0.0.1:8000/tools
+```
 
 `services`
 
