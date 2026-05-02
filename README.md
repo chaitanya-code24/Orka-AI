@@ -14,6 +14,7 @@ Orka is designed as a small framework project rather than a one-off script. The 
 - reusable tool registration with schema discovery
 - config-driven tool loading
 - simple in-memory service integrations
+- connector tools for Gmail, Google Sheets, Notion, HubSpot, and Slack
 
 The default example flow plans and executes two actions:
 
@@ -213,6 +214,25 @@ curl http://127.0.0.1:8000/tools
 - CRM customer creation
 - email sending
 - simple in-memory persistence for demo flows
+
+`connectors`
+
+- Gmail email tool
+- Google Sheets append-row tool
+- Notion page creation tool
+- HubSpot contact creation tool
+- Slack message tool
+- demo mode by default, with `ORKA_CONNECTOR_MODE=live` enforcing required credential environment variables
+
+Connector tool names:
+
+```text
+gmail_send_email_tool
+google_sheets_append_row_tool
+notion_create_page_tool
+hubspot_create_contact_tool
+slack_send_message_tool
+```
 
 ## Resume Notes
 
