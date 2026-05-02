@@ -9,6 +9,7 @@ Orka is designed as a small framework project rather than a one-off script. The 
 - a package-first project structure
 - a public `OrkaAgent` entry point
 - LangGraph state, nodes, and workflow compilation
+- optional LLM-based planning with deterministic offline fallback
 - reusable tool registration
 - config-driven tool loading
 - simple in-memory service integrations
@@ -34,7 +35,7 @@ User Query
   -> OrkaAgent
   -> load config
   -> build LangGraph workflow
-  -> planner node
+  -> planner node, using an LLM planner when configured or the rule-based fallback
   -> tool node
   -> validator node
   -> continue / retry / end
@@ -177,6 +178,7 @@ Example output:
 
 - `AgentState` typed state definition
 - node functions for planning, execution, validation, and routing
+- LLM and rule-based planner implementations
 - `build_graph()` for compiling the LangGraph workflow
 
 `tools`

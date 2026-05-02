@@ -5,10 +5,12 @@ from dotenv import load_dotenv
 import orka.tools  # noqa: F401
 from orka.config.loader import load_config
 from orka.core.exceptions import GraphExecutionError, ValidationError
+from orka.core.llm import get_llm
 from orka.core.results import AgentRunResult, StepResult
 from orka.core.run_store import BaseRunStore, SQLiteRunStore
 from orka.core.storage import get_default_storage
 from orka.graph.builder import build_graph
+from orka.graph.planner import LLMPlanner, Planner, RuleBasedPlanner
 from orka.graph.state import AgentState
 from orka.tools import get_tool_definition
 
@@ -25,11 +27,22 @@ class OrkaAgent:
         self.storage = get_default_storage(storage_path)
         self.run_store = run_store or SQLiteRunStore(self.storage)
         self._initialize_tools()
-        self.graph = build_graph()
+        self.planner = self._create_planner()
+        self.graph = build_graph(self.planner)
 
     def _initialize_tools(self) -> None:
         for tool_name in self.config.tools:
             get_tool_definition(tool_name)
+
+    def _create_planner(self) -> Planner:
+        fallback = RuleBasedPlanner()
+        if self.config.model is None:
+            return fallback
+
+        try:
+            return LLMPlanner(get_llm(self.config.model), fallback=fallback)
+        except ValueError:
+            return fallback
 
     def run(self, query: str) -> dict[str, object]:
         """Run the configured LangGraph workflow for a user query."""

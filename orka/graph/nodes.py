@@ -1,22 +1,17 @@
-import re
 from typing import Any
 
 from orka.core.exceptions import ToolExecutionError
 from orka.core.results import StepResult
+from orka.graph.planner import Planner, RuleBasedPlanner
 from orka.graph.state import AgentState
 from orka.tools import invoke_tool
 
 
-def planner_node(state: AgentState) -> AgentState:
+def planner_node(state: AgentState, planner: Planner | None = None) -> AgentState:
     query = state["input"]
-    available_tools = set(state["available_tools"])
-    planned_steps: list[str] = []
-
-    lowered_query = query.lower()
-    if "customer" in lowered_query and "create_customer_tool" in available_tools:
-        planned_steps.append("create_customer_tool")
-    if "email" in lowered_query and "send_email_tool" in available_tools:
-        planned_steps.append("send_email_tool")
+    planner = planner or RuleBasedPlanner()
+    plan = planner.plan(query, state["available_tools"])
+    planned_steps = plan.steps
 
     if not planned_steps:
         return {
@@ -28,11 +23,10 @@ def planner_node(state: AgentState) -> AgentState:
             "status": "end",
         }
 
-    context = _extract_context(query)
     remaining_steps = planned_steps[1:]
     return {
         **state,
-        "context": context,
+        "context": plan.context,
         "steps": remaining_steps,
         "current_step": planned_steps[0],
         "tool_result": None,
@@ -141,34 +135,3 @@ def _execute_tool(tool_name: str, context: dict[str, Any]) -> dict[str, Any]:
         return invoke_tool(tool_name)
     except Exception as exc:
         raise ToolExecutionError(f"Tool '{tool_name}' failed: {exc}") from exc
-
-
-def _extract_context(query: str) -> dict[str, Any]:
-    email_match = re.search(r"[\w.+-]+@[\w.-]+\.\w+", query)
-    city_match = re.search(r"\b(?:in|from)\s+([A-Za-z][A-Za-z\s-]{1,40}?)(?=\s+(?:and|message|to)\b|[.,]|$)", query, re.IGNORECASE)
-    name_match = re.search(r"\bcustomer(?:\s+named)?\s+([A-Za-z][A-Za-z\s'-]{1,40}?)(?=\s+(?:in|from|and|to|message)\b|[.,]|$)", query, re.IGNORECASE)
-    message_match = re.search(r"\bmessage\s+(.+)$", query, re.IGNORECASE)
-
-    customer_name = _clean_capture(name_match.group(1)) if name_match else "Demo Customer"
-    customer_city = _clean_capture(city_match.group(1)) if city_match else "Pune"
-    email_to = email_match.group(0) if email_match else "customer@example.com"
-    email_message = _clean_capture(message_match.group(1)) if message_match else "Welcome from Orka."
-
-    if _looks_like_missing_name(customer_name):
-        customer_name = "Demo Customer"
-
-    return {
-        "customer_name": customer_name,
-        "customer_city": customer_city,
-        "email_to": email_to,
-        "email_message": email_message,
-    }
-
-
-def _clean_capture(value: str) -> str:
-    return value.strip().rstrip(".,")
-
-
-def _looks_like_missing_name(value: str) -> bool:
-    lowered = value.lower()
-    return lowered.startswith(("and ", "to ", "message ")) or lowered in {"and", "to", "message"} or "send email" in lowered
