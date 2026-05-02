@@ -6,5 +6,6 @@
   "tools": [
     "create_customer_tool",
     "send_email_tool"
-  ]
+  ],
+  "storage_path": "data/orka.db"
 }

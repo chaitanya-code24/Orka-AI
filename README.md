@@ -209,6 +209,28 @@ List registered tool schemas:
 curl http://127.0.0.1:8000/tools
 ```
 
+## Docker
+
+Build and run Orka with Docker Compose:
+
+```bash
+docker compose up --build
+```
+
+The API is available at:
+
+```text
+http://127.0.0.1:8000
+```
+
+The dashboard is available at:
+
+```text
+http://127.0.0.1:8000/dashboard
+```
+
+Runtime data is stored in the `orka-data` Docker volume. Connector credentials can be supplied through `.env`.
+
 `services`
 
 - CRM customer creation
