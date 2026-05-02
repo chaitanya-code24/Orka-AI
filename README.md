@@ -10,6 +10,7 @@ Orka is designed as a small framework project rather than a one-off script. The 
 - a public `OrkaAgent` entry point
 - LangGraph state, nodes, and workflow compilation
 - optional LLM-based planning with deterministic offline fallback
+- human approval gates before selected tools execute
 - reusable tool registration
 - config-driven tool loading
 - simple in-memory service integrations
@@ -106,6 +107,7 @@ Supported config behavior:
 - `tools` is required
 - `model` is optional
 - legacy `llm` config is still accepted and mapped into the internal model config
+- `approval_required_tools` is optional and can list tool names or `"*"` for all tools
 
 ## Usage
 
@@ -144,6 +146,12 @@ curl -X POST http://127.0.0.1:8000/runs ^
   -d "{\"query\": \"create customer Alice in Pune and send email to alice@example.com message Welcome Alice\"}"
 ```
 
+Approve a waiting run:
+
+```bash
+curl -X POST http://127.0.0.1:8000/runs/{run_id}/approve
+```
+
 Example output:
 
 ```python
@@ -173,6 +181,7 @@ Example output:
 `OrkaAgent`
 
 - public API for loading config and running the graph
+- supports `approve_run(run_id)` for human-gated workflows
 
 `graph`
 

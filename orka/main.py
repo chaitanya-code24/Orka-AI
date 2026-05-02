@@ -24,6 +24,8 @@ class RunResponse(BaseModel):
     message: str
     run_id: str
     timestamp: str
+    input: str | None = None
+    approved: bool | None = None
 
 
 @lru_cache(maxsize=1)
@@ -58,6 +60,11 @@ def create_app() -> FastAPI:
         if run is None:
             raise HTTPException(status_code=404, detail=f"Run '{run_id}' was not found.")
         return run
+
+    @app.post("/runs/{run_id}/approve", response_model=RunResponse)
+    def approve_run(run_id: str) -> dict[str, object]:
+        log_event(logging.INFO, "api.run.approve", "Received run approval", run_id=run_id)
+        return get_agent().approve_run(run_id)
 
     @app.exception_handler(ConfigError)
     @app.exception_handler(GraphExecutionError)

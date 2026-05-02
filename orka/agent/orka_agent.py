@@ -57,11 +57,39 @@ class OrkaAgent:
             errors=[],
             message="Run started.",
         )
+        initial_state = self._build_initial_state(query.strip(), result.run_id, approved=False)
+        return self._invoke_graph(result, initial_state)
 
-        initial_state: AgentState = {
-            "run_id": result.run_id,
-            "input": query.strip(),
+    def approve_run(self, run_id: str) -> dict[str, object]:
+        saved_run = self.run_store.get_run(run_id)
+        if saved_run is None:
+            raise ValidationError(f"Run '{run_id}' was not found.")
+        if saved_run.get("status") != "awaiting_approval":
+            raise ValidationError(f"Run '{run_id}' is not waiting for approval.")
+
+        query = saved_run.get("input")
+        if not isinstance(query, str) or not query.strip():
+            raise ValidationError(f"Run '{run_id}' does not include a resumable input.")
+
+        result = AgentRunResult(
+            success=False,
+            status="started",
+            output=None,
+            steps=[],
+            errors=[],
+            message="Run started.",
+            run_id=run_id,
+        )
+        initial_state = self._build_initial_state(query.strip(), run_id, approved=True)
+        return self._invoke_graph(result, initial_state)
+
+    def _build_initial_state(self, query: str, run_id: str, approved: bool) -> AgentState:
+        return {
+            "run_id": run_id,
+            "input": query,
             "available_tools": self.config.tools,
+            "approval_required_tools": self.config.approval_required_tools,
+            "approved": approved,
             "retry_count": 0,
             "max_retries": 1,
             "context": {},
@@ -74,6 +102,7 @@ class OrkaAgent:
             "status": "idle",
         }
 
+    def _invoke_graph(self, result: AgentRunResult, initial_state: AgentState) -> dict[str, object]:
         try:
             final_state = self.graph.invoke(initial_state)
         except Exception as exc:
@@ -89,14 +118,21 @@ class OrkaAgent:
         result.output = final_state["final_output"] or final_state["tool_result"]
         result.errors = final_state["errors"]
         result.steps = completed_steps
+
         if result.success:
             result.message = "Request completed successfully."
+        elif final_state["status"] == "awaiting_approval":
+            result.message = "Run is waiting for approval before executing tools."
         elif final_state["status"] == "end" and not completed_steps:
             result.message = "No configured workflow steps matched the request."
         else:
             result.message = "Request completed with issues."
-        self.run_store.save_run(result.run_id, result.to_dict())
-        return result.to_dict()
+
+        result_dict = result.to_dict()
+        result_dict["input"] = initial_state["input"]
+        result_dict["approved"] = initial_state["approved"]
+        self.run_store.save_run(result.run_id, result_dict)
+        return result_dict
 
     def get_run(self, run_id: str) -> dict[str, object] | None:
         return self.run_store.get_run(run_id)

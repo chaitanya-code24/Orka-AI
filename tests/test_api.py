@@ -51,6 +51,39 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(get_response.status_code, 200)
         self.assertEqual(get_response.json()["run_id"], payload["run_id"])
 
+    def test_approve_endpoint_resumes_waiting_run(self):
+        import os
+        from orka.main import create_app, get_agent
+
+        self.config_path.write_text(
+            json.dumps(
+                {
+                    "tools": ["create_customer_tool", "send_email_tool"],
+                    "approval_required_tools": ["*"],
+                    "storage_path": str(self.storage_path),
+                }
+            ),
+            encoding="utf-8",
+        )
+        os.environ["ORKA_CONFIG_PATH"] = str(self.config_path)
+        get_agent.cache_clear()
+        client = TestClient(create_app())
+
+        create_response = client.post(
+            "/runs",
+            json={"query": "create customer Alice in Pune and send email to alice@example.com message Welcome Alice"},
+        )
+        self.assertEqual(create_response.status_code, 200)
+        pending = create_response.json()
+        self.assertEqual(pending["status"], "awaiting_approval")
+
+        approve_response = client.post(f"/runs/{pending['run_id']}/approve")
+
+        self.assertEqual(approve_response.status_code, 200)
+        approved = approve_response.json()
+        self.assertTrue(approved["success"])
+        self.assertEqual(approved["status"], "completed")
+
 
 if __name__ == "__main__":
     unittest.main()

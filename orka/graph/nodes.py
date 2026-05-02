@@ -23,6 +23,24 @@ def planner_node(state: AgentState, planner: Planner | None = None) -> AgentStat
             "status": "end",
         }
 
+    if not state.get("approved", False) and _requires_approval(planned_steps, state["approval_required_tools"]):
+        return {
+            **state,
+            "context": plan.context,
+            "steps": planned_steps[1:],
+            "current_step": planned_steps[0],
+            "tool_result": None,
+            "final_output": {
+                "approval": {
+                    "required": True,
+                    "planned_steps": planned_steps,
+                    "context": plan.context,
+                },
+                "message": "Run is waiting for approval before executing tools.",
+            },
+            "status": "awaiting_approval",
+        }
+
     remaining_steps = planned_steps[1:]
     return {
         **state,
@@ -36,7 +54,7 @@ def planner_node(state: AgentState, planner: Planner | None = None) -> AgentStat
 
 
 def tool_node(state: AgentState) -> AgentState:
-    if state["status"] == "end":
+    if state["status"] in {"end", "awaiting_approval"}:
         return state
 
     current_step = state["current_step"]
@@ -71,7 +89,7 @@ def tool_node(state: AgentState) -> AgentState:
 
 
 def validator_node(state: AgentState) -> AgentState:
-    if state["status"] == "end":
+    if state["status"] in {"end", "awaiting_approval"}:
         return state
 
     if state["tool_result"] is None:
@@ -116,6 +134,13 @@ def decision_node(state: AgentState) -> str:
     if status == "continue":
         return "continue"
     return "end"
+
+
+def _requires_approval(planned_steps: list[str], approval_required_tools: list[str]) -> bool:
+    if "*" in approval_required_tools:
+        return True
+    required = set(approval_required_tools)
+    return any(step in required for step in planned_steps)
 
 
 def _execute_tool(tool_name: str, context: dict[str, Any]) -> dict[str, Any]:

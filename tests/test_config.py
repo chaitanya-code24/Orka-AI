@@ -16,6 +16,7 @@ class ConfigLoaderTests(unittest.TestCase):
                     {
                         "llm": {"provider": "groq", "model": "llama-3.3-70b-versatile"},
                         "tools": ["create_customer_tool"],
+                        "approval_required_tools": ["create_customer_tool"],
                     }
                 ),
                 encoding="utf-8",
@@ -24,6 +25,7 @@ class ConfigLoaderTests(unittest.TestCase):
             config = load_config(str(config_path))
 
             self.assertEqual(config.tools, ["create_customer_tool"])
+            self.assertEqual(config.approval_required_tools, ["create_customer_tool"])
             self.assertIsNotNone(config.model)
             self.assertEqual(config.model.provider, "groq")
 
@@ -31,6 +33,17 @@ class ConfigLoaderTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             config_path = Path(temp_dir) / "config.json"
             config_path.write_text(json.dumps({"tools": []}), encoding="utf-8")
+
+            with self.assertRaises(ConfigError):
+                load_config(str(config_path))
+
+    def test_load_config_validates_approval_tools_shape(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            config_path = Path(temp_dir) / "config.json"
+            config_path.write_text(
+                json.dumps({"tools": ["create_customer_tool"], "approval_required_tools": "all"}),
+                encoding="utf-8",
+            )
 
             with self.assertRaises(ConfigError):
                 load_config(str(config_path))

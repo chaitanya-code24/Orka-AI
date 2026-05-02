@@ -17,6 +17,12 @@ def load_config(config_path: str) -> OrkaConfig:
     if not isinstance(tools, list) or not tools or not all(isinstance(tool, str) and tool.strip() for tool in tools):
         raise ConfigError("Config must define a non-empty 'tools' list of tool names")
 
+    approval_required_tools = raw_config.get("approval_required_tools", [])
+    if not isinstance(approval_required_tools, list) or not all(
+        isinstance(tool, str) and tool.strip() for tool in approval_required_tools
+    ):
+        raise ConfigError("'approval_required_tools' must be a list of tool names when provided")
+
     model_data = raw_config.get("model") or raw_config.get("llm")
     model = None
     if model_data:
@@ -37,4 +43,5 @@ def load_config(config_path: str) -> OrkaConfig:
         version=version,
         environment=environment,
         storage_path=storage_path,
+        approval_required_tools=approval_required_tools,
     )

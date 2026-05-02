@@ -51,6 +51,37 @@ class OrkaAgentTests(unittest.TestCase):
         self.assertEqual(result["status"], "end")
         self.assertEqual(result["message"], "No configured workflow steps matched the request.")
 
+    def test_run_can_wait_for_approval_and_resume(self):
+        self.config_path.write_text(
+            json.dumps(
+                {
+                    "tools": ["create_customer_tool", "send_email_tool"],
+                    "approval_required_tools": ["*"],
+                    "storage_path": str(self.storage_path),
+                }
+            ),
+            encoding="utf-8",
+        )
+        run_store = SQLiteRunStore(self.storage)
+        agent = OrkaAgent(str(self.config_path), run_store=run_store)
+
+        pending = agent.run("create customer Alice in Pune and send email to alice@example.com message Welcome Alice")
+
+        self.assertEqual(pending["status"], "awaiting_approval")
+        self.assertFalse(pending["success"])
+        self.assertEqual(len(pending["steps"]), 0)
+        self.assertEqual(len(list_customers()), 0)
+        self.assertEqual(pending["output"]["approval"]["planned_steps"], ["create_customer_tool", "send_email_tool"])
+
+        approved = agent.approve_run(pending["run_id"])
+
+        self.assertTrue(approved["success"])
+        self.assertEqual(approved["status"], "completed")
+        self.assertTrue(approved["approved"])
+        self.assertEqual(len(approved["steps"]), 2)
+        self.assertEqual(len(list_customers()), 1)
+        self.assertEqual(len(list_emails()), 1)
+
 
 if __name__ == "__main__":
     unittest.main()
