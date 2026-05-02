@@ -138,6 +138,12 @@ Start the API server:
 orka serve --config config.json --host 127.0.0.1 --port 8000
 ```
 
+Open the run dashboard:
+
+```text
+http://127.0.0.1:8000/dashboard
+```
+
 Submit a run over HTTP:
 
 ```bash

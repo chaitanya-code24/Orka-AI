@@ -3,12 +3,13 @@ import os
 from functools import lru_cache
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, Field
 
 from orka import OrkaAgent
 from orka.core.exceptions import ConfigError, GraphExecutionError, OrkaError, ValidationError
 from orka.core.logging import log_event
+from orka.dashboard import render_dashboard
 from orka.tools import list_tool_schemas
 
 
@@ -49,6 +50,10 @@ def create_app() -> FastAPI:
     @app.get("/tools")
     def list_tools() -> list[dict[str, object]]:
         return list_tool_schemas()
+
+    @app.get("/dashboard", response_class=HTMLResponse)
+    def dashboard() -> str:
+        return render_dashboard(get_agent().list_runs(), list_tool_schemas())
 
     @app.post("/runs", response_model=RunResponse)
     def create_run(payload: RunRequest) -> dict[str, object]:

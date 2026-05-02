@@ -56,6 +56,12 @@ class ApiTests(unittest.TestCase):
         tool_names = {tool["name"] for tool in tools_response.json()}
         self.assertIn("create_customer_tool", tool_names)
 
+        dashboard_response = client.get("/dashboard")
+        self.assertEqual(dashboard_response.status_code, 200)
+        self.assertIn("text/html", dashboard_response.headers["content-type"])
+        self.assertIn("Orka Dashboard", dashboard_response.text)
+        self.assertIn(payload["run_id"], dashboard_response.text)
+
     def test_approve_endpoint_resumes_waiting_run(self):
         import os
         from orka.main import create_app, get_agent
