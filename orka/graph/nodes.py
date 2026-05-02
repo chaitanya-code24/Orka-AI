@@ -1,22 +1,17 @@
-import re
 from typing import Any
 
 from orka.core.exceptions import ToolExecutionError
 from orka.core.results import StepResult
+from orka.graph.planner import Planner, RuleBasedPlanner
 from orka.graph.state import AgentState
 from orka.tools import invoke_tool
 
 
-def planner_node(state: AgentState) -> AgentState:
+def planner_node(state: AgentState, planner: Planner | None = None) -> AgentState:
     query = state["input"]
-    available_tools = set(state["available_tools"])
-    planned_steps: list[str] = []
-
-    lowered_query = query.lower()
-    if "customer" in lowered_query and "create_customer_tool" in available_tools:
-        planned_steps.append("create_customer_tool")
-    if "email" in lowered_query and "send_email_tool" in available_tools:
-        planned_steps.append("send_email_tool")
+    planner = planner or RuleBasedPlanner()
+    plan = planner.plan(query, state["available_tools"])
+    planned_steps = plan.steps
 
     if not planned_steps:
         return {
@@ -28,11 +23,28 @@ def planner_node(state: AgentState) -> AgentState:
             "status": "end",
         }
 
-    context = _extract_context(query)
+    if not state.get("approved", False) and _requires_approval(planned_steps, state["approval_required_tools"]):
+        return {
+            **state,
+            "context": plan.context,
+            "steps": planned_steps[1:],
+            "current_step": planned_steps[0],
+            "tool_result": None,
+            "final_output": {
+                "approval": {
+                    "required": True,
+                    "planned_steps": planned_steps,
+                    "context": plan.context,
+                },
+                "message": "Run is waiting for approval before executing tools.",
+            },
+            "status": "awaiting_approval",
+        }
+
     remaining_steps = planned_steps[1:]
     return {
         **state,
-        "context": context,
+        "context": plan.context,
         "steps": remaining_steps,
         "current_step": planned_steps[0],
         "tool_result": None,
@@ -42,7 +54,7 @@ def planner_node(state: AgentState) -> AgentState:
 
 
 def tool_node(state: AgentState) -> AgentState:
-    if state["status"] == "end":
+    if state["status"] in {"end", "awaiting_approval"}:
         return state
 
     current_step = state["current_step"]
@@ -77,7 +89,7 @@ def tool_node(state: AgentState) -> AgentState:
 
 
 def validator_node(state: AgentState) -> AgentState:
-    if state["status"] == "end":
+    if state["status"] in {"end", "awaiting_approval"}:
         return state
 
     if state["tool_result"] is None:
@@ -124,6 +136,13 @@ def decision_node(state: AgentState) -> str:
     return "end"
 
 
+def _requires_approval(planned_steps: list[str], approval_required_tools: list[str]) -> bool:
+    if "*" in approval_required_tools:
+        return True
+    required = set(approval_required_tools)
+    return any(step in required for step in planned_steps)
+
+
 def _execute_tool(tool_name: str, context: dict[str, Any]) -> dict[str, Any]:
     try:
         if tool_name == "create_customer_tool":
@@ -141,34 +160,3 @@ def _execute_tool(tool_name: str, context: dict[str, Any]) -> dict[str, Any]:
         return invoke_tool(tool_name)
     except Exception as exc:
         raise ToolExecutionError(f"Tool '{tool_name}' failed: {exc}") from exc
-
-
-def _extract_context(query: str) -> dict[str, Any]:
-    email_match = re.search(r"[\w.+-]+@[\w.-]+\.\w+", query)
-    city_match = re.search(r"\b(?:in|from)\s+([A-Za-z][A-Za-z\s-]{1,40}?)(?=\s+(?:and|message|to)\b|[.,]|$)", query, re.IGNORECASE)
-    name_match = re.search(r"\bcustomer(?:\s+named)?\s+([A-Za-z][A-Za-z\s'-]{1,40}?)(?=\s+(?:in|from|and|to|message)\b|[.,]|$)", query, re.IGNORECASE)
-    message_match = re.search(r"\bmessage\s+(.+)$", query, re.IGNORECASE)
-
-    customer_name = _clean_capture(name_match.group(1)) if name_match else "Demo Customer"
-    customer_city = _clean_capture(city_match.group(1)) if city_match else "Pune"
-    email_to = email_match.group(0) if email_match else "customer@example.com"
-    email_message = _clean_capture(message_match.group(1)) if message_match else "Welcome from Orka."
-
-    if _looks_like_missing_name(customer_name):
-        customer_name = "Demo Customer"
-
-    return {
-        "customer_name": customer_name,
-        "customer_city": customer_city,
-        "email_to": email_to,
-        "email_message": email_message,
-    }
-
-
-def _clean_capture(value: str) -> str:
-    return value.strip().rstrip(".,")
-
-
-def _looks_like_missing_name(value: str) -> bool:
-    lowered = value.lower()
-    return lowered.startswith(("and ", "to ", "message ")) or lowered in {"and", "to", "message"} or "send email" in lowered

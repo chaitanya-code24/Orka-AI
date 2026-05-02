@@ -5,10 +5,12 @@ from dotenv import load_dotenv
 import orka.tools  # noqa: F401
 from orka.config.loader import load_config
 from orka.core.exceptions import GraphExecutionError, ValidationError
+from orka.core.llm import get_llm
 from orka.core.results import AgentRunResult, StepResult
 from orka.core.run_store import BaseRunStore, SQLiteRunStore
 from orka.core.storage import get_default_storage
 from orka.graph.builder import build_graph
+from orka.graph.planner import LLMPlanner, Planner, RuleBasedPlanner
 from orka.graph.state import AgentState
 from orka.tools import get_tool_definition
 
@@ -25,11 +27,22 @@ class OrkaAgent:
         self.storage = get_default_storage(storage_path)
         self.run_store = run_store or SQLiteRunStore(self.storage)
         self._initialize_tools()
-        self.graph = build_graph()
+        self.planner = self._create_planner()
+        self.graph = build_graph(self.planner)
 
     def _initialize_tools(self) -> None:
         for tool_name in self.config.tools:
             get_tool_definition(tool_name)
+
+    def _create_planner(self) -> Planner:
+        fallback = RuleBasedPlanner()
+        if self.config.model is None:
+            return fallback
+
+        try:
+            return LLMPlanner(get_llm(self.config.model), fallback=fallback)
+        except ValueError:
+            return fallback
 
     def run(self, query: str) -> dict[str, object]:
         """Run the configured LangGraph workflow for a user query."""
@@ -44,11 +57,39 @@ class OrkaAgent:
             errors=[],
             message="Run started.",
         )
+        initial_state = self._build_initial_state(query.strip(), result.run_id, approved=False)
+        return self._invoke_graph(result, initial_state)
 
-        initial_state: AgentState = {
-            "run_id": result.run_id,
-            "input": query.strip(),
+    def approve_run(self, run_id: str) -> dict[str, object]:
+        saved_run = self.run_store.get_run(run_id)
+        if saved_run is None:
+            raise ValidationError(f"Run '{run_id}' was not found.")
+        if saved_run.get("status") != "awaiting_approval":
+            raise ValidationError(f"Run '{run_id}' is not waiting for approval.")
+
+        query = saved_run.get("input")
+        if not isinstance(query, str) or not query.strip():
+            raise ValidationError(f"Run '{run_id}' does not include a resumable input.")
+
+        result = AgentRunResult(
+            success=False,
+            status="started",
+            output=None,
+            steps=[],
+            errors=[],
+            message="Run started.",
+            run_id=run_id,
+        )
+        initial_state = self._build_initial_state(query.strip(), run_id, approved=True)
+        return self._invoke_graph(result, initial_state)
+
+    def _build_initial_state(self, query: str, run_id: str, approved: bool) -> AgentState:
+        return {
+            "run_id": run_id,
+            "input": query,
             "available_tools": self.config.tools,
+            "approval_required_tools": self.config.approval_required_tools,
+            "approved": approved,
             "retry_count": 0,
             "max_retries": 1,
             "context": {},
@@ -61,6 +102,7 @@ class OrkaAgent:
             "status": "idle",
         }
 
+    def _invoke_graph(self, result: AgentRunResult, initial_state: AgentState) -> dict[str, object]:
         try:
             final_state = self.graph.invoke(initial_state)
         except Exception as exc:
@@ -76,14 +118,21 @@ class OrkaAgent:
         result.output = final_state["final_output"] or final_state["tool_result"]
         result.errors = final_state["errors"]
         result.steps = completed_steps
+
         if result.success:
             result.message = "Request completed successfully."
+        elif final_state["status"] == "awaiting_approval":
+            result.message = "Run is waiting for approval before executing tools."
         elif final_state["status"] == "end" and not completed_steps:
             result.message = "No configured workflow steps matched the request."
         else:
             result.message = "Request completed with issues."
-        self.run_store.save_run(result.run_id, result.to_dict())
-        return result.to_dict()
+
+        result_dict = result.to_dict()
+        result_dict["input"] = initial_state["input"]
+        result_dict["approved"] = initial_state["approved"]
+        self.run_store.save_run(result.run_id, result_dict)
+        return result_dict
 
     def get_run(self, run_id: str) -> dict[str, object] | None:
         return self.run_store.get_run(run_id)

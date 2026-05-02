@@ -9,7 +9,9 @@ Orka is designed as a small framework project rather than a one-off script. The 
 - a package-first project structure
 - a public `OrkaAgent` entry point
 - LangGraph state, nodes, and workflow compilation
-- reusable tool registration
+- optional LLM-based planning with deterministic offline fallback
+- human approval gates before selected tools execute
+- reusable tool registration with schema discovery
 - config-driven tool loading
 - simple in-memory service integrations
 
@@ -34,7 +36,7 @@ User Query
   -> OrkaAgent
   -> load config
   -> build LangGraph workflow
-  -> planner node
+  -> planner node, using an LLM planner when configured or the rule-based fallback
   -> tool node
   -> validator node
   -> continue / retry / end
@@ -105,6 +107,7 @@ Supported config behavior:
 - `tools` is required
 - `model` is optional
 - legacy `llm` config is still accepted and mapped into the internal model config
+- `approval_required_tools` is optional and can list tool names or `"*"` for all tools
 
 ## Usage
 
@@ -135,12 +138,24 @@ Start the API server:
 orka serve --config config.json --host 127.0.0.1 --port 8000
 ```
 
+Open the run dashboard:
+
+```text
+http://127.0.0.1:8000/dashboard
+```
+
 Submit a run over HTTP:
 
 ```bash
 curl -X POST http://127.0.0.1:8000/runs ^
   -H "Content-Type: application/json" ^
   -d "{\"query\": \"create customer Alice in Pune and send email to alice@example.com message Welcome Alice\"}"
+```
+
+Approve a waiting run:
+
+```bash
+curl -X POST http://127.0.0.1:8000/runs/{run_id}/approve
 ```
 
 Example output:
@@ -172,17 +187,26 @@ Example output:
 `OrkaAgent`
 
 - public API for loading config and running the graph
+- supports `approve_run(run_id)` for human-gated workflows
 
 `graph`
 
 - `AgentState` typed state definition
 - node functions for planning, execution, validation, and routing
+- LLM and rule-based planner implementations
 - `build_graph()` for compiling the LangGraph workflow
 
 `tools`
 
 - decorator-based registration
 - global lookup by tool name
+- JSON-schema-like tool contracts for planner prompts and API clients
+
+List registered tool schemas:
+
+```bash
+curl http://127.0.0.1:8000/tools
+```
 
 `services`
 

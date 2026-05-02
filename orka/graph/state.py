@@ -5,6 +5,8 @@ class AgentState(TypedDict):
     run_id: str
     input: str
     available_tools: list[str]
+    approval_required_tools: list[str]
+    approved: bool
     retry_count: int
     max_retries: int
     context: dict[str, Any]
