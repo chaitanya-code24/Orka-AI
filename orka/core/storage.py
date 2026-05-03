@@ -9,6 +9,7 @@ class SQLiteStorage:
     def __init__(self, db_path: str):
         self.db_path = str(db_path)
         self._lock = Lock()
+        Path(self.db_path).parent.mkdir(parents=True, exist_ok=True)
         self._initialize()
 
     def _connect(self) -> sqlite3.Connection:

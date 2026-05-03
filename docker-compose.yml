@@ -1,0 +1,16 @@
+services:
+  orka:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      ORKA_CONFIG_PATH: /app/config.json
+      ORKA_CONNECTOR_MODE: demo
+    env_file:
+      - .env
+    volumes:
+      - orka-data:/app/data
+    command: uvicorn orka.main:app --host 0.0.0.0 --port 8000
+
+volumes:
+  orka-data:

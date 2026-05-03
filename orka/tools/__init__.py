@@ -11,6 +11,7 @@ from orka.tools.registry import (
 
 # Import services to trigger tool registration
 from orka.services import crm, email
+import orka.connectors  # noqa: F401
 
 __all__ = [
     "registry",
