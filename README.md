@@ -1,61 +1,82 @@
-# Orka AI
+# 🧠 Orka AI — Action-Oriented Agent Framework
 
-Orka AI is a lightweight LangGraph-based framework for building action-oriented AI agents in Python. It provides a clean public API, a reusable tool registry, simple service integrations, and a graph workflow that turns a natural language request into deterministic tool execution steps.
+<p align="center">
+  <b>A lightweight LangGraph-based framework for building deterministic, tool-driven AI agents.</b>
+</p>
 
-## Overview
+<p align="center">
+  <img src="https://img.shields.io/badge/status-active-success.svg" />
+  <img src="https://img.shields.io/badge/python-3.10%2B-blue.svg" />
+  <img src="https://img.shields.io/badge/license-MIT-green.svg" />
+</p>
 
-Orka is designed as a small framework project rather than a one-off script. The current implementation focuses on:
+---
 
-- a package-first project structure
-- a public `OrkaAgent` entry point
-- LangGraph state, nodes, and workflow compilation
-- optional LLM-based planning with deterministic offline fallback
-- human approval gates before selected tools execute
-- reusable tool registration with schema discovery
-- config-driven tool loading
-- simple in-memory service integrations
-- connector tools for Gmail, Google Sheets, Notion, HubSpot, and Slack
+## 📌 Overview
 
-The default example flow plans and executes two actions:
+**Orka AI** is a lightweight, modular framework for building **action-oriented AI agents** in Python.
 
-1. create a customer
-2. send an email
+Unlike typical LLM wrappers, Orka focuses on:
 
-## Architecture
+* deterministic execution
+* structured workflows
+* real tool integration
 
-Orka uses a LangGraph workflow with these core stages:
+It converts natural language queries into **controlled, step-by-step tool execution pipelines**.
 
-1. `planner_node`
-2. `tool_node`
-3. `validator_node`
-4. conditional routing via `decision_node`
+---
 
-High-level flow:
+## 🚀 Key Highlights
+
+* 🧩 **LangGraph-powered workflows**
+* 🧠 **LLM planning with rule-based fallback**
+* 🛠 **Reusable tool registry with schema discovery**
+* 🔐 **Human approval gates for safe execution**
+* ⚙️ **Config-driven architecture**
+* 🔌 **Multi-service connectors (Gmail, Slack, Notion, etc.)**
+* 📦 **Package-first project structure**
+
+---
+
+## ⚙️ Architecture
+
+Orka uses a structured LangGraph pipeline:
 
 ```text
 User Query
-  -> OrkaAgent
-  -> load config
-  -> build LangGraph workflow
-  -> planner node, using an LLM planner when configured or the rule-based fallback
-  -> tool node
-  -> validator node
-  -> continue / retry / end
-  -> final output
+   │
+   ▼
+OrkaAgent
+   │
+   ▼
+Planner Node (LLM / Rule-based)
+   │
+   ▼
+Tool Node
+   │
+   ▼
+Validator Node
+   │
+   ▼
+Decision Node (continue / retry / end)
+   │
+   ▼
+Final Output
 ```
 
-Project layout:
+---
+
+## 🏗 Project Structure
 
 ```text
 orka/
 ├── orka/
-│   ├── __init__.py
-│   ├── agent/
-│   ├── config/
-│   ├── core/
-│   ├── graph/
-│   ├── services/
-│   └── tools/
+│   ├── agent/        # Agent entrypoint
+│   ├── config/       # Configuration handling
+│   ├── core/         # Core utilities
+│   ├── graph/        # LangGraph workflow logic
+│   ├── services/     # Service integrations
+│   └── tools/        # Tool registry and implementations
 ├── examples/
 ├── tests/
 ├── config.json
@@ -63,30 +84,45 @@ orka/
 └── README.md
 ```
 
-## Installation
+---
 
-Create and activate a virtual environment:
+## 🧠 Execution Flow Example
+
+Default example:
+
+1. Create a customer
+2. Send an email
+
+```text
+Input:
+"create customer Alice in Pune and send email to alice@example.com message Welcome Alice"
+
+Execution:
+→ plan steps  
+→ execute tools  
+→ validate output  
+→ return result  
+```
+
+---
+
+## ⚙️ Installation
 
 ```bash
 python -m venv .venv
 .venv\Scripts\activate
-```
-
-Install dependencies:
-
-```bash
 pip install -r requirements.txt
 ```
 
-For editable installation:
+For development mode:
 
 ```bash
 pip install -e .
 ```
 
-## Configuration
+---
 
-Orka loads configuration from a JSON file.
+## 🔧 Configuration
 
 Example `config.json`:
 
@@ -103,16 +139,18 @@ Example `config.json`:
 }
 ```
 
-Supported config behavior:
+### Notes:
 
-- `tools` is required
-- `model` is optional
-- legacy `llm` config is still accepted and mapped into the internal model config
-- `approval_required_tools` is optional and can list tool names or `"*"` for all tools
+* `tools` → required
+* `model` → optional
+* supports legacy LLM config
+* optional `approval_required_tools`
 
-## Usage
+---
 
-Basic example:
+## 🧪 Usage
+
+### Python API
 
 ```python
 from orka import OrkaAgent
@@ -121,31 +159,31 @@ agent = OrkaAgent("config.json")
 print(agent.run("create customer Alice in Pune and send email to alice@example.com message Welcome Alice"))
 ```
 
-Run the included example:
+---
 
-```bash
-python -m examples.basic
-```
-
-Run from the CLI:
+### CLI
 
 ```bash
 orka run "create customer Alice in Pune and send email to alice@example.com message Welcome Alice"
 ```
 
-Start the API server:
+---
+
+### Start API Server
 
 ```bash
 orka serve --config config.json --host 127.0.0.1 --port 8000
 ```
 
-Open the run dashboard:
+Dashboard:
 
-```text
+```
 http://127.0.0.1:8000/dashboard
 ```
 
-Submit a run over HTTP:
+---
+
+### HTTP Request
 
 ```bash
 curl -X POST http://127.0.0.1:8000/runs ^
@@ -153,119 +191,132 @@ curl -X POST http://127.0.0.1:8000/runs ^
   -d "{\"query\": \"create customer Alice in Pune and send email to alice@example.com message Welcome Alice\"}"
 ```
 
-Approve a waiting run:
+---
+
+### Approve Run
 
 ```bash
 curl -X POST http://127.0.0.1:8000/runs/{run_id}/approve
 ```
 
-Example output:
+---
+
+## 📊 Example Output
 
 ```python
 {
-  'success': True,
-  'status': 'completed',
-  'output': {
-    'steps': [...],
-    'last_result': {
-      'success': True,
-      'email': {
-        'to': 'alice@example.com',
-        'message': 'Welcome Alice',
-        'status': 'sent'
-      },
-      'message': 'Email sent to alice@example.com.'
+  "success": true,
+  "status": "completed",
+  "output": {
+    "steps": [...],
+    "last_result": {
+      "success": true,
+      "email": {
+        "to": "alice@example.com",
+        "message": "Welcome Alice",
+        "status": "sent"
+      }
     }
-  },
-  'steps': [...],
-  'errors': [],
-  'message': 'Request completed successfully.'
+  }
 }
 ```
 
-## Framework Components
+---
 
-`OrkaAgent`
+## 🧩 Framework Components
 
-- public API for loading config and running the graph
-- supports `approve_run(run_id)` for human-gated workflows
+### 🔹 OrkaAgent
 
-`graph`
+* Main public API
+* Loads config and executes workflows
+* Supports human approval flows
 
-- `AgentState` typed state definition
-- node functions for planning, execution, validation, and routing
-- LLM and rule-based planner implementations
-- `build_graph()` for compiling the LangGraph workflow
+### 🔹 Graph System
 
-`tools`
+* Typed `AgentState`
+* Planner, tool, validator, decision nodes
+* Workflow compilation via LangGraph
 
-- decorator-based registration
-- global lookup by tool name
-- JSON-schema-like tool contracts for planner prompts and API clients
+### 🔹 Tool System
 
-List registered tool schemas:
+* Decorator-based registration
+* Schema-driven tool contracts
+* Global registry lookup
+
+List tools:
 
 ```bash
 curl http://127.0.0.1:8000/tools
 ```
 
-## Docker
+---
 
-Build and run Orka with Docker Compose:
+## 🔌 Connectors
+
+Available integrations:
+
+* Gmail
+* Google Sheets
+* Notion
+* HubSpot
+* Slack
+
+Modes:
+
+* `demo` (default)
+* `live` via environment variables
+
+---
+
+## 🐳 Docker
 
 ```bash
 docker compose up --build
 ```
 
-The API is available at:
+API:
 
-```text
+```
 http://127.0.0.1:8000
 ```
 
-The dashboard is available at:
+Dashboard:
 
-```text
+```
 http://127.0.0.1:8000/dashboard
 ```
 
-Runtime data is stored in the `orka-data` Docker volume. Connector credentials can be supplied through `.env`.
+---
 
-`services`
+## 🎯 What This Project Demonstrates
 
-- CRM customer creation
-- email sending
-- simple in-memory persistence for demo flows
+* State-driven agent workflows
+* Graph-based orchestration
+* Tool abstraction layers
+* Config-driven design
+* Real-world integration patterns
 
-`connectors`
+---
 
-- Gmail email tool
-- Google Sheets append-row tool
-- Notion page creation tool
-- HubSpot contact creation tool
-- Slack message tool
-- demo mode by default, with `ORKA_CONNECTOR_MODE=live` enforcing required credential environment variables
+## 📌 Status
 
-Connector tool names:
+Orka AI is intentionally lightweight and designed for:
 
-```text
-gmail_send_email_tool
-google_sheets_append_row_tool
-notion_create_page_tool
-hubspot_create_contact_tool
-slack_send_message_tool
-```
+* learning
+* prototyping
+* extending into advanced agent systems
 
-## Resume Notes
+---
 
-This project demonstrates practical LangGraph concepts including:
+## 📄 License
 
-- state-driven workflow design
-- graph node composition
-- conditional routing
-- tool orchestration through a reusable registry
-- framework-oriented Python packaging
+MIT License
 
-## Status
+---
 
-Current implementation is intentionally lightweight and framework-oriented. It is well suited for learning, demos, resume projects, and extension into more advanced agent workflows.
+## 🙌 Contributing
+
+Contributions are welcome.
+Feel free to open issues or submit pull requests.
+
+---
