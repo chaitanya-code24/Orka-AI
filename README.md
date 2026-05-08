@@ -5,6 +5,23 @@
 </p>
 
 <p align="center">
+  <b>LLM Providers</b><br/>
+  <img src="https://img.shields.io/badge/OpenAI-412991?logo=openai&logoColor=white" />
+  <img src="https://img.shields.io/badge/Claude-D97757?logo=anthropic&logoColor=white" />
+  <img src="https://img.shields.io/badge/Gemini-4285F4?logo=googlegemini&logoColor=white" />
+  <img src="https://img.shields.io/badge/Groq-F55036?logo=groq&logoColor=white" />
+</p>
+
+<p align="center">
+  <b>Connectors</b><br/>
+  <img src="https://img.shields.io/badge/Gmail-EA4335?logo=gmail&logoColor=white" />
+  <img src="https://img.shields.io/badge/Google%20Sheets-34A853?logo=googlesheets&logoColor=white" />
+  <img src="https://img.shields.io/badge/Notion-000000?logo=notion&logoColor=white" />
+  <img src="https://img.shields.io/badge/HubSpot-FF7A59?logo=hubspot&logoColor=white" />
+  <img src="https://img.shields.io/badge/Slack-4A154B?logo=slack&logoColor=white" />
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/status-active-success.svg" />
   <img src="https://img.shields.io/badge/python-3.10%2B-blue.svg" />
   <img src="https://img.shields.io/badge/license-MIT-green.svg" />
