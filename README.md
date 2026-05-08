@@ -1,4 +1,4 @@
-# 🧠 Orka AI — Action-Oriented Agent Framework
+<h1 align="center">Orka AI — Action-Oriented Agent Framework</h1>
 
 <p align="center">
   <b>A lightweight LangGraph-based framework for building deterministic, tool-driven AI agents.</b>
