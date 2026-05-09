@@ -60,7 +60,7 @@ It converts natural language queries into **controlled, step-by-step tool execut
 Orka uses a structured LangGraph pipeline:
 
 <p align="center">
-  <img src="./arch%20dig.png" alt="Orka AI architecture diagram" width="850" />
+  <img src="./architecture.png" alt="Orka AI architecture diagram" width="850" />
 </p>
 
 ```text
