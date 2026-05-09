@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <b>Connectors</b><br/>
+  <b>Connector Targets</b><br/>
   <img src="https://img.shields.io/badge/Gmail-EA4335?logo=gmail&logoColor=white" />
   <img src="https://img.shields.io/badge/Google%20Sheets-34A853?logo=googlesheets&logoColor=white" />
   <img src="https://img.shields.io/badge/Notion-000000?logo=notion&logoColor=white" />
@@ -50,7 +50,7 @@ It converts natural language queries into **controlled, step-by-step tool execut
 * 🛠 **Reusable tool registry with schema discovery**
 * 🔐 **Human approval gates for safe execution**
 * ⚙️ **Config-driven architecture**
-* 🔌 **Multi-service connectors (Gmail, Slack, Notion, etc.)**
+* 🔌 **Connector-ready architecture for business tools**
 * 📦 **Package-first project structure**
 
 ---
@@ -272,9 +272,11 @@ curl http://127.0.0.1:8000/tools
 
 ---
 
-## 🔌 Connectors
+## 🔌 Connectors Roadmap
 
-Available integrations:
+Orka currently includes a connector-ready architecture with registered tool contracts, schema discovery, demo-mode execution, and live-mode credential validation.
+
+The following connector targets are in progress:
 
 * Gmail
 * Google Sheets
@@ -282,10 +284,11 @@ Available integrations:
 * HubSpot
 * Slack
 
-Modes:
+Current connector status:
 
-* `demo` (default)
-* `live` via environment variables
+* `demo` mode is available for local workflow testing
+* `live` mode validates required credential environment variables
+* real external API execution and OAuth/token storage are planned next
 
 ---
 
